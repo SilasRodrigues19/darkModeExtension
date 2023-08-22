@@ -9,7 +9,7 @@
 <samp>
 <p align="center">
   <a href="https://github.com/SilasRodrigues19/darkModeExtension">
-    <img src="./logo.svg" alt="Logo" width="100" height="80">
+    <img src="./assets/img/logo-128.png" alt="Logo" width="100" height="80">
   </a>
 
   <h3 align="center">Darkmode Extension</h3>
