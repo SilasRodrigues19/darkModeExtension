@@ -1,0 +1,16 @@
+body {
+  width: 300px;
+  padding: 20px;
+}
+
+#popup-content {
+  text-align: center;
+}
+
+button {
+  margin: 5px;
+}
+
+#site-list {
+  margin-top: 20px;
+}
