@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
-  const activateBtn = document.getElementById('activate-btn');
-  const deactivateBtn = document.getElementById('deactivate-btn');
-  const addSiteBtn = document.getElementById('add-site-btn');
-  const siteListItems = document.getElementById('site-list-items');
-  const siteUrlInput = document.getElementById('site-url');
+  const activateBtn = document.querySelector('#activate-btn');
+  const deactivateBtn = document.querySelector('#deactivate-btn');
+  const addSiteBtn = document.querySelector('#add-site-btn');
+  const siteListItems = document.querySelector('#site-list-items');
+  const siteUrlInput = document.querySelector('#site-url');
 
   activateBtn.addEventListener('click', () => {
     applyDarkModeToActiveTab();
@@ -14,7 +14,18 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   addSiteBtn.addEventListener('click', () => {
-    const siteUrl = siteUrlInput.value;
+    const siteUrl = siteUrlInput.value.trim();
+
+    if (!isValidURL(siteUrl)) {
+      alert('Por favor, insira uma URL válida.');
+      return;
+    }
+
+    if (isURLInList(siteUrl)) {
+      alert('Esta URL já está na lista.');
+      return;
+    }
+
     addSiteToStorage(siteUrl);
     updateSiteList();
   });
@@ -33,12 +44,11 @@ document.addEventListener('DOMContentLoaded', function () {
       currentWindow: true,
     });
 
-    const siteUrl = new URL(tab.url).hostname;
+    const siteUrl = new URL(tab.url);
     applyDarkModeStyles(tab.id, siteUrl);
   }
 
   function applyDarkModeStyles(tabId, siteUrl) {
-    // Enviar uma mensagem para o content script para que ele aplique o estilo
     chrome.scripting.executeScript({
       target: { tabId: tabId },
       function: applyDarkModeStylesContentScript,
@@ -47,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function applyDarkModeStylesContentScript() {
     const darkModeStyles = `
-      body {
+      html {
         filter: invert(1) hue-rotate(200deg);
       }
     `;
@@ -59,10 +69,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function clearDarkModeStyles() {
-    // Obter o ID da guia ativa
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const [tab] = tabs;
-      // Enviar uma mensagem para o content script para que ele remova o estilo
       chrome.scripting.executeScript({
         target: { tabId: tab.id },
         function: clearDarkModeStylesContentScript,
@@ -71,10 +79,24 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function clearDarkModeStylesContentScript() {
-    const styleElement = document.getElementById('darkModeStyles');
+    const styleElement = document.querySelector('#darkModeStyles');
     if (styleElement) {
       styleElement.remove();
     }
+  }
+
+  function isValidURL(url) {
+    try {
+      new URL(url);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function isURLInList(url) {
+    const sites = JSON.parse(localStorage.getItem('darkModeSites')) || [];
+    return sites.includes(url);
   }
 
   function addSiteToStorage(siteUrl) {
@@ -109,7 +131,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const [tab] = tabs;
-    const siteUrl = new URL(tab.url).hostname;
+    const siteUrl = new URL(tab.url);
+    siteUrlInput.value = siteUrl;
     updateSiteList();
   });
 });

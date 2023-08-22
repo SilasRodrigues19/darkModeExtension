@@ -2,7 +2,7 @@ const siteUrl = new URL(window.location.href).hostname;
 
 function applyDarkModeStyles() {
   const darkModeStyles = `
-    body {
+    html {
       filter: invert(1) hue-rotate(200deg);
     }
   `;
