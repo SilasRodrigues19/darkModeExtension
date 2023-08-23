@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const activateBtn = document.querySelector('#activate-btn');
-  const deactivateBtn = document.querySelector('#deactivate-btn');
   const addSiteBtn = document.querySelector('#add-site-btn');
+  const removeSiteBtn = document.querySelector('#deactivate-btn');
   const siteListItems = document.querySelector('#site-list-items');
   const siteUrlInput = document.querySelector('#site-url');
 
@@ -9,9 +9,18 @@ document.addEventListener('DOMContentLoaded', function () {
     applyDarkModeToActiveTab();
   });
 
-  deactivateBtn.addEventListener('click', () => {
-    clearDarkModeStyles();
+  removeSiteBtn.addEventListener('click', () => {
+    reloadActiveTab();
   });
+
+  async function reloadActiveTab() {
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    chrome.tabs.reload(tab.id);
+  }
 
   addSiteBtn.addEventListener('click', () => {
     const siteUrl = siteUrlInput.value.trim();
@@ -27,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     addSiteToStorage(siteUrl);
+    applyCustomColorSchemeToActiveTab(); // Chamada da função correta
     updateSiteList();
   });
 
@@ -44,45 +54,14 @@ document.addEventListener('DOMContentLoaded', function () {
       currentWindow: true,
     });
 
-    const siteUrl = new URL(tab.url);
-    applyDarkModeStyles(tab.id, siteUrl);
-  }
-
-  function applyDarkModeStyles(tabId, siteUrl) {
     chrome.scripting.executeScript({
-      target: { tabId: tabId },
+      target: { tabId: tab.id },
       function: applyDarkModeStylesContentScript,
     });
   }
 
   function applyDarkModeStylesContentScript() {
-    const darkModeStyles = `
-      html {
-        filter: invert(1) hue-rotate(200deg);
-      }
-    `;
-
-    const style = document.createElement('style');
-    style.id = 'darkModeStyles';
-    style.textContent = darkModeStyles;
-    document.head.appendChild(style);
-  }
-
-  function clearDarkModeStyles() {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const [tab] = tabs;
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        function: clearDarkModeStylesContentScript,
-      });
-    });
-  }
-
-  function clearDarkModeStylesContentScript() {
-    const styleElement = document.querySelector('#darkModeStyles');
-    if (styleElement) {
-      styleElement.remove();
-    }
+    applyCustomColorScheme();
   }
 
   function isValidURL(url) {
